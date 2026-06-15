@@ -1,0 +1,13 @@
+{
+  "name": "cof2-compagnon",
+  "version": "0.1.0",
+  "description": "Module compagnon pour Chroniques Oubliées 2 (Foundry VTT) : profil Psionique et Points d'Ego.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "compile": "node ./tools/compile-less.mjs"
+  },
+  "dependencies": {
+    "less": "^4.2.0"
+  }
+}

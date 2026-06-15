@@ -1,0 +1,49 @@
+{
+  "COF2COMPAGNON": {
+    "settings": {
+      "allowPsionic": {
+        "name": "Autoriser psionique et points d'ego",
+        "hint": "Active l'affichage et la gestion du profil Psionique et des Points d'Ego (PE). Tant que cette option est décochée, aucun élément lié au psionique ou à l'ego n'apparaît sur les fiches d'objets ou d'acteurs."
+      }
+    },
+    "resources": {
+      "long": {
+        "ego": "Points d'Ego"
+      },
+      "medium": {
+        "ego": "Ego"
+      },
+      "short": {
+        "ego": "PE"
+      },
+      "tooltip": {
+        "ego": "Points d'Ego = Volonté + nombre de pouvoirs psioniques appris",
+        "nbPsi": "Nb de pouvoirs psi"
+      }
+    },
+    "capacity": {
+      "psionique": "Psionique",
+      "isPsionic": "Pouvoir psionique",
+      "egoCost": "Coût en Ego",
+      "noEgoCost": "Sans coût en Ego"
+    },
+    "profile": {
+      "isPsionic": "Profil psionique"
+    },
+    "dialogs": {
+      "recoverEgo": {
+        "title": "Récupération des Points d'Ego",
+        "content": "Dépenser un dé de récupération pour récupérer des Points d'Ego ? (1d4° par DR, valeur maximale du dé sur un repos complet)",
+        "metabolism": "Contrôle du métabolisme"
+      },
+      "egoBurn": {
+        "title": "Brûlure d'ego",
+        "content": "Pas assez de Points d'Ego : il vous manque {needed} point(s). Utiliser tout de même {capacity} en sacrifiant votre énergie vitale ?"
+      }
+    },
+    "notif": {
+      "notEnoughEgo": "Pas assez de Points d'Ego : il vous manque {needed} point(s).",
+      "egoBurn": "{name} sacrifie son énergie vitale pour {capacity}."
+    }
+  }
+}

@@ -1,0 +1,5 @@
+# Node Modules
+node_modules/
+
+# Foundry VTT
+style/**/*.css
