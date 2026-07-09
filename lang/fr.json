@@ -32,11 +32,11 @@
     },
     "dialogs": {
       "recover": {
-        "title": "Récupération",
         "hint": "Dépenser 1 dé de récupération (DR) pour récupérer :",
-        "pv": "Points de Vie (PV)",
+        "pv": "Points de Vigueur (PV)",
         "pe": "Points d'Ego (PE)",
-        "confirm": "Valider",
+        "confirm": "OK",
+        "cancel": "Annuler",
         "nothing": "PV et Points d'Ego déjà au maximum."
       },
       "egoBurn": {
@@ -47,6 +47,11 @@
     "notif": {
       "notEnoughEgo": "Pas assez de Points d'Ego : il vous manque {needed} point(s).",
       "egoBurn": "{name} sacrifie son énergie vitale pour {capacity}."
+    },
+    "chat": {
+      "recovered": "PE récupéré(s)",
+      "egoRecoveredGm": "{actorName} a récupéré {amount} point(s) d'ego par {source}",
+      "recoveredTooltip": "La récupération est appliquée directement sur la cible"
     }
   }
 }

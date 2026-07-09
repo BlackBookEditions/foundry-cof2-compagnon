@@ -229,14 +229,16 @@ export async function handlePsiRecovery(actor, isFullRest) {
   }
 
   const choice = await foundry.applications.api.DialogV2.wait({
-    window: { title: game.i18n.localize("COF2COMPAGNON.dialogs.recover.title") },
+    // La classe "co" place le dialogue dans le contexte CSS du système → checkbox stylées comme les siennes
+    classes: ["co", "cof2-recover-dialog"],
+    window: { title: game.i18n.localize(isFullRest ? "CO.ui.fullRest" : "CO.ui.fastRest") },
     content: `
       <p>${game.i18n.localize("COF2COMPAGNON.dialogs.recover.hint")}</p>
       <div class="form-group">
-        <label><input type="checkbox" name="pv" ${pvNeeded ? "checked" : "disabled"} /> ${game.i18n.localize("COF2COMPAGNON.dialogs.recover.pv")}</label>
+        <label><input type="checkbox" name="pv" ${pvNeeded ? "checked" : 'class="disabled"'} /> ${game.i18n.localize("COF2COMPAGNON.dialogs.recover.pv")}</label>
       </div>
       <div class="form-group">
-        <label><input type="checkbox" name="pe" ${peNeeded ? "checked" : "disabled"} /> ${game.i18n.localize("COF2COMPAGNON.dialogs.recover.pe")}</label>
+        <label><input type="checkbox" name="pe" ${peNeeded ? "checked" : 'class="disabled"'} /> ${game.i18n.localize("COF2COMPAGNON.dialogs.recover.pe")}</label>
       </div>`,
     buttons: [
       {
@@ -245,7 +247,7 @@ export async function handlePsiRecovery(actor, isFullRest) {
         default: true,
         callback: (event, button) => ({ pv: button.form.elements.pv.checked, pe: button.form.elements.pe.checked }),
       },
-      { action: "cancel", label: game.i18n.localize("Cancel"), callback: () => null },
+      { action: "cancel", label: game.i18n.localize("COF2COMPAGNON.dialogs.recover.cancel"), callback: () => null },
     ],
     rejectClose: false,
     modal: true,
@@ -264,21 +266,37 @@ export async function handlePsiRecovery(actor, isFullRest) {
     })
   }
 
-  // Récupération des PE : 1d4° (valeur max du dé sur un repos complet).
+  // Récupération des PE : 1d4° (valeur max du dé sur un repos complet). On reprend le mécanisme des PV :
+  // un message public indiquant les PE récupérés + un message chuchoté au MJ (comme applyHeal pour les PV).
   if (choice.pe) {
     const formula = evolvingEgoFormula(actor)
-    let recovered
-    if (isFullRest) {
-      const roll = await new Roll(formula).evaluate({ maximize: true }) // résultat maximal automatique
-      recovered = roll.total
+    const roll = isFullRest ? await new Roll(formula).evaluate({ maximize: true }) : await new Roll(formula).roll()
+    const recovered = roll.total
+    const restName = game.i18n.localize(isFullRest ? "CO.ui.fullRest" : "CO.ui.fastRest")
+    const CoChat = game.system?.api?.CoChat
+
+    // Message public : carte calquée sur la carte de soin des PV (même structure header/destinataire/total/dé)
+    if (CoChat) {
+      await new CoChat(actor)
+        .withTemplate("modules/cof2-compagnon/templates/chat/ego-recovery-card.hbs")
+        .withData({ flavor: restName, total: recovered, formula: roll.formula, tooltip: await roll.getTooltip(), actorImg: actor.img, actorName: actor.name })
+        .withRolls([roll])
+        .withOptions({ speaker: ChatMessage.getSpeaker({ actor }) })
+        .create()
     } else {
-      const roll = await new Roll(formula).roll()
-      await roll.toMessage({
-        flavor: game.i18n.localize("COF2COMPAGNON.dialogs.recover.pe"),
-        speaker: ChatMessage.getSpeaker({ actor }),
-      })
-      recovered = roll.total
+      await roll.toMessage({ flavor: restName, speaker: ChatMessage.getSpeaker({ actor }) })
     }
+
+    // Message chuchoté au MJ (parité avec le soin des PV : CoChat + template message-card, exposé par le système)
+    if (CoChat) {
+      const gmMessage = game.i18n.format("COF2COMPAGNON.chat.egoRecoveredGm", { actorName: actor.name, amount: recovered, source: restName })
+      await new CoChat(actor)
+        .withTemplate(game.system.CONST.TEMPLATE.MESSAGE)
+        .withData({ message: gmMessage })
+        .withWhisper(ChatMessage.getWhisperRecipients("GM").map((u) => u.id))
+        .create()
+    }
+
     await actor.setFlag(MODULE_ID, FLAGS.ego, { value: Math.min(egoCurrent + recovered, egoMax) })
   }
 
@@ -353,7 +371,9 @@ export function injectCapacityFields(application, element) {
     const fieldset = legend?.closest("fieldset")
     if (!fieldset) return
     const checked = noEgo[idx] === true ? "checked" : ""
-    const label = `<label class="cof2-noego"><input type="checkbox" name="flags.${MODULE_ID}.noEgoCost.${idx}" ${checked} data-dtype="Boolean" /> ${game.i18n.localize("COF2COMPAGNON.capacity.noEgoCost")}</label>`
+    // En mode lecture (fiche verrouillée), rendre la case non cochable comme les autres propriétés (classe .disabled du système)
+    const disabled = application.isPlayMode === true ? 'class="disabled"' : ""
+    const label = `<label class="cof2-noego"><input type="checkbox" name="flags.${MODULE_ID}.noEgoCost.${idx}" ${checked} ${disabled} data-dtype="Boolean" /> ${game.i18n.localize("COF2COMPAGNON.capacity.noEgoCost")}</label>`
     const target = fieldset.querySelector(".flexrow") ?? fieldset
     target.insertAdjacentHTML("beforeend", label)
   })

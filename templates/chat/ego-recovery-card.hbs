@@ -1,0 +1,31 @@
+<div class="co chat-card roll-card heal-card cof2-ego-card" data-actor-id="{{owner}}">
+  <header class="card-header flexcol">
+    <div class="type-card"><label><i class="fas fa-brain" data-tooltip="{{localize 'COF2COMPAGNON.resources.long.ego'}}" data-tooltip-direction="LEFT"></i></label></div>
+    <div class="action-name" data-tooltip="{{flavor}}" data-tooltip-direction="LEFT">{{flavor}}</div>
+  </header>
+
+  <div class="card-content">
+    <section class="targets">
+      <ul class="target-list">
+        <li>
+          <img class="target-actor-img" src="{{actorImg}}" />
+          <span class="name-stacked">{{actorName}}</span>
+        </li>
+      </ul>
+    </section>
+    <section class="result">
+      <div class="form-group total-result">
+        <div data-tooltip="{{localize 'COF2COMPAGNON.chat.recoveredTooltip'}}" data-tooltip-direction="UP">{{total}}<label> {{localize "COF2COMPAGNON.chat.recovered"}}</label></div>
+      </div>
+    </section>
+  </div>
+
+  <footer class="card-footer">
+    <div class="dice-roll" data-action="expandRoll">
+      <div class="dice-result">
+        <div class="dice-formula">{{localize "CO.ui.formula"}} : {{formula}}</div>
+        {{{tooltip}}}
+      </div>
+    </div>
+  </footer>
+</div>
