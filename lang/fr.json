@@ -31,10 +31,13 @@
       "isPsionic": "Profil psionique"
     },
     "dialogs": {
-      "recoverEgo": {
-        "title": "Récupération des Points d'Ego",
-        "content": "Dépenser un dé de récupération pour récupérer des Points d'Ego ? (1d4° par DR, valeur maximale du dé sur un repos complet)",
-        "metabolism": "Contrôle du métabolisme"
+      "recover": {
+        "title": "Récupération",
+        "hint": "Dépenser 1 dé de récupération (DR) pour récupérer :",
+        "pv": "Points de Vie (PV)",
+        "pe": "Points d'Ego (PE)",
+        "confirm": "Valider",
+        "nothing": "PV et Points d'Ego déjà au maximum."
       },
       "egoBurn": {
         "title": "Brûlure d'ego",

@@ -1,4 +1,4 @@
-import { MODULE_ID, SETTINGS, FLAGS, EGO_RECOVERY_FORMULA, METABOLISM_SLUG, PSIONIC_HP_PER_LEVEL } from "./config/ego.mjs"
+import { MODULE_ID, SETTINGS, FLAGS, EGO_RECOVERY_FORMULA, PSIONIC_HP_PER_LEVEL } from "./config/ego.mjs"
 
 /**
  * Logique des Points d'Ego (PE) pour le profil Psionique.
@@ -42,11 +42,6 @@ export function learnedPsionicCapacities(actor) {
  */
 export function isPsionicCharacter(actor) {
   return learnedPsionicCapacities(actor).length > 0
-}
-
-/** @returns {boolean} true si l'acteur connaît la capacité « Contrôle du métabolisme ». */
-export function hasMetabolismControl(actor) {
-  return actor.items.some((i) => i.type === "capacity" && i.system.learned && i.system?.slug === METABOLISM_SLUG)
 }
 
 /**
@@ -198,58 +193,98 @@ export async function onPostActivateAction(actor, { item, indice, state, shiftKe
 }
 
 /**
- * Hook `co2.postUseRecovery` : propose de dépenser un DR pour récupérer des PE.
- * 1 DR → 1d4° PE (valeur max du dé sur un repos complet). Un DR ainsi dépensé ne rend pas de PV — sauf si l'acteur possède « Contrôle du métabolisme », auquel cas il récupère aussi des PV.
+ * Hook `co2.preUseRecovery` : pour un personnage psionique, prend en charge la récupération liée à un DR
+ * en proposant une fenêtre unique de choix PV / PE (le système co2 saute alors son propre dialogue de soin).
+ * Enregistre le travail dans la garde asynchrone fournie par co2 ; la promesse résout sur `true` = pris en main.
  */
-export async function onPostUseRecovery(actor, { isFullRest } = {}) {
+export function onPreUseRecovery(actor, { isFullRest, guard } = {}) {
   if (!isPsionicEnabled() || !isPsionicCharacter(actor)) return
+  guard?.(handlePsiRecovery(actor, isFullRest))
+}
 
-  const max = computeEgoMax(actor)
-  const current = getEgoValue(actor)
-  if (current >= max) return
-
+/**
+ * Fenêtre de récupération psionique : dépense d'un seul DR pour récupérer, au choix du joueur, des PV
+ * et/ou des PE (deux cases à cocher). Le soin PV réutilise la formule du système (`getRecoveryHealFormula`),
+ * les PE regagnent 1d4° (valeur max du dé sur un repos complet).
+ * @param {Actor} actor
+ * @param {boolean} isFullRest
+ * @returns {Promise<boolean>} Toujours `true` : la récupération d'un psi est intégralement gérée ici.
+ */
+export async function handlePsiRecovery(actor, isFullRest) {
   const rp = actor.system?.resources?.recovery
-  if (!rp || rp.value <= 0) return
+  if (!rp || rp.value <= 0) {
+    ui.notifications.warn(game.i18n.localize("CO.notif.warningNoMoreRecoveryPoints"))
+    return true
+  }
 
-  const proceed = await foundry.applications.api.DialogV2.confirm({
-    window: { title: game.i18n.localize("COF2COMPAGNON.dialogs.recoverEgo.title") },
-    content: game.i18n.localize("COF2COMPAGNON.dialogs.recoverEgo.content"),
+  const egoMax = computeEgoMax(actor)
+  const egoCurrent = getEgoValue(actor)
+  const hp = actor.system?.attributes?.hp
+  const pvNeeded = hp ? hp.value < hp.max : false
+  const peNeeded = egoCurrent < egoMax
+
+  if (!pvNeeded && !peNeeded) {
+    ui.notifications.info(game.i18n.localize("COF2COMPAGNON.dialogs.recover.nothing"))
+    return true
+  }
+
+  const choice = await foundry.applications.api.DialogV2.wait({
+    window: { title: game.i18n.localize("COF2COMPAGNON.dialogs.recover.title") },
+    content: `
+      <p>${game.i18n.localize("COF2COMPAGNON.dialogs.recover.hint")}</p>
+      <div class="form-group">
+        <label><input type="checkbox" name="pv" ${pvNeeded ? "checked" : "disabled"} /> ${game.i18n.localize("COF2COMPAGNON.dialogs.recover.pv")}</label>
+      </div>
+      <div class="form-group">
+        <label><input type="checkbox" name="pe" ${peNeeded ? "checked" : "disabled"} /> ${game.i18n.localize("COF2COMPAGNON.dialogs.recover.pe")}</label>
+      </div>`,
+    buttons: [
+      {
+        action: "confirm",
+        label: game.i18n.localize("COF2COMPAGNON.dialogs.recover.confirm"),
+        default: true,
+        callback: (event, button) => ({ pv: button.form.elements.pv.checked, pe: button.form.elements.pe.checked }),
+      },
+      { action: "cancel", label: game.i18n.localize("Cancel"), callback: () => null },
+    ],
     rejectClose: false,
     modal: true,
   })
-  if (!proceed) return
+  if (!choice || (!choice.pv && !choice.pe)) return true
 
-  const formula = evolvingEgoFormula(actor)
-  let recovered
-  if (isFullRest) {
-    const roll = await new Roll(formula).evaluate({ maximize: true }) // résultat maximal automatique
-    recovered = roll.total
-  } else {
-    const roll = await new Roll(formula).roll()
-    await roll.toMessage({
-      flavor: game.i18n.localize("COF2COMPAGNON.dialogs.recoverEgo.title"),
-      speaker: ChatMessage.getSpeaker({ actor }),
+  // Soin des PV : réutilise la formule du système (dé de récupération + demi-niveau + modificateurs).
+  if (choice.pv && typeof actor.rollHeal === "function") {
+    const level = Math.round((actor.system.attributes?.level ?? 1) / 2)
+    const formula = actor.system?.getRecoveryHealFormula?.(isFullRest) ?? `${actor.system?.hd} + ${level}`
+    await actor.rollHeal(null, {
+      actionName: game.i18n.localize(isFullRest ? "CO.ui.fullRest" : "CO.ui.fastRest"),
+      healFormula: formula,
+      targetType: "self",
+      targets: [actor],
     })
-    recovered = roll.total
   }
 
-  const next = Math.min(current + recovered, max)
-  await actor.setFlag(MODULE_ID, FLAGS.ego, { value: next })
-  await actor.update({ "system.resources.recovery.value": Math.max(rp.value - 1, 0) })
-
-  // Contrôle du métabolisme : le DR dépensé pour les PE permet aussi de récupérer des PV
-  if (hasMetabolismControl(actor) && typeof actor.rollHeal === "function") {
-    const hd = actor.system?.hd
-    if (hd) {
-      const level = Math.round((actor.system.attributes?.level ?? 1) / 2)
-      await actor.rollHeal(null, {
-        actionName: game.i18n.localize("COF2COMPAGNON.dialogs.recoverEgo.metabolism"),
-        healFormula: `${hd} + ${level}`,
-        targetType: "self",
-        targets: [actor],
+  // Récupération des PE : 1d4° (valeur max du dé sur un repos complet).
+  if (choice.pe) {
+    const formula = evolvingEgoFormula(actor)
+    let recovered
+    if (isFullRest) {
+      const roll = await new Roll(formula).evaluate({ maximize: true }) // résultat maximal automatique
+      recovered = roll.total
+    } else {
+      const roll = await new Roll(formula).roll()
+      await roll.toMessage({
+        flavor: game.i18n.localize("COF2COMPAGNON.dialogs.recover.pe"),
+        speaker: ChatMessage.getSpeaker({ actor }),
       })
+      recovered = roll.total
     }
+    await actor.setFlag(MODULE_ID, FLAGS.ego, { value: Math.min(egoCurrent + recovered, egoMax) })
   }
+
+  // Un seul DR dépensé, que PV, PE ou les deux aient été cochés.
+  await actor.update({ "system.resources.recovery.value": Math.max(rp.value - 1, 0) })
+  return true
 }
 
 /**
@@ -307,7 +342,8 @@ export function injectCapacityFields(application, element) {
 
   anchor.insertAdjacentHTML("afterend", html)
 
-  // Case « sans coût en Ego » dans le fieldset Propriétés de chaque action (si pouvoir psi)
+  // Case « sans coût en Ego » ajoutée aux propriétés de chaque action (si pouvoir psi),
+  // intégrée dans la rangée des autres propriétés (après « Ne consomme pas de charges »).
   if (!isPsi) return
   const noEgo = item.getFlag(MODULE_ID, FLAGS.noEgoCost) ?? {}
   element.querySelectorAll('.tab.action.item[data-item-type="action"]').forEach((tab) => {
@@ -317,12 +353,9 @@ export function injectCapacityFields(application, element) {
     const fieldset = legend?.closest("fieldset")
     if (!fieldset) return
     const checked = noEgo[idx] === true ? "checked" : ""
-    fieldset.insertAdjacentHTML(
-      "beforeend",
-      `<div class="form-group cof2-noego">
-        <label><input type="checkbox" name="flags.${MODULE_ID}.noEgoCost.${idx}" ${checked} data-dtype="Boolean" /> ${game.i18n.localize("COF2COMPAGNON.capacity.noEgoCost")}</label>
-      </div>`,
-    )
+    const label = `<label class="cof2-noego"><input type="checkbox" name="flags.${MODULE_ID}.noEgoCost.${idx}" ${checked} data-dtype="Boolean" /> ${game.i18n.localize("COF2COMPAGNON.capacity.noEgoCost")}</label>`
+    const target = fieldset.querySelector(".flexrow") ?? fieldset
+    target.insertAdjacentHTML("beforeend", label)
   })
 }
 

@@ -2,7 +2,7 @@ import { MODULE_ID, SETTINGS } from "./module/config/ego.mjs"
 import {
   onPreActivateAction,
   onPostActivateAction,
-  onPostUseRecovery,
+  onPreUseRecovery,
   onComputeProfileHpPerLevel,
   injectCapacityFields,
   injectProfileFields,
@@ -38,8 +38,8 @@ Hooks.once("init", () => {
 Hooks.on("co2.preActivateAction", onPreActivateAction)
 Hooks.on("co2.postActivateAction", onPostActivateAction)
 
-// Récupération des Points d'Ego (hook ajouté au système co2 dans useRecovery)
-Hooks.on("co2.postUseRecovery", onPostUseRecovery)
+// Récupération psionique PV/PE : le module prend la main sur la dépense de DR (hook ajouté au système co2 dans useRecovery)
+Hooks.on("co2.preUseRecovery", onPreUseRecovery)
 
 // PV/niveau du profil psionique = 4 (hook ajouté au système co2 dans _prepareHPMax)
 Hooks.on("co2.computeProfileHpPerLevel", onComputeProfileHpPerLevel)

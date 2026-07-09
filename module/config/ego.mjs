@@ -27,6 +27,3 @@ export const EGO_RECOVERY_FORMULA = "1d4°"
 
 /** PV/niveau forcés pour un profil psionique (aligne l'affichage sur le calcul du hook). */
 export const PSIONIC_HP_PER_LEVEL = 4
-
-/** Slug de la capacité « Contrôle du métabolisme » (le DR dépensé pour les PE rend aussi des PV). */
-export const METABOLISM_SLUG = "controle-du-metabolisme"
