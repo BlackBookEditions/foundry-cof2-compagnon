@@ -1,4 +1,4 @@
-import { MODULE_ID, SETTINGS, FLAGS, EGO_RECOVERY_FORMULA, METABOLISM_SLUG } from "./config/ego.mjs"
+import { MODULE_ID, SETTINGS, FLAGS, EGO_RECOVERY_FORMULA, METABOLISM_SLUG, PSIONIC_HP_PER_LEVEL } from "./config/ego.mjs"
 
 /**
  * Logique des Points d'Ego (PE) pour le profil Psionique.
@@ -260,7 +260,7 @@ export async function onPostUseRecovery(actor, { isFullRest } = {}) {
 export function onComputeProfileHpPerLevel(actor, data) {
   if (!isPsionicEnabled()) return
   if (data?.profile?.getFlag?.(MODULE_ID, FLAGS.isPsionic) === true) {
-    data.value = 4
+    data.value = PSIONIC_HP_PER_LEVEL
   }
 }
 
@@ -327,7 +327,9 @@ export function injectCapacityFields(application, element) {
 }
 
 /**
- * Hook `renderCoProfileSheet` : injecte la case « Profil psionique » dans la fiche profil.
+ * Hook `renderCoProfileSheet` : injecte la case « Profil psionique » dans la fiche profil,
+ * et force l'affichage du champ « Vigueur par niveau » à PSIONIC_HP_PER_LEVEL quand la case est cochée
+ * (le champ affiche sinon les PV de la famille — cf. le hook `onComputeProfileHpPerLevel` côté calcul).
  */
 export function injectProfileFields(application, element) {
   if (!isPsionicEnabled()) return
@@ -346,6 +348,14 @@ export function injectProfileFields(application, element) {
       <div class="form-fields"><input type="checkbox" name="flags.${MODULE_ID}.isPsionic" ${isPsi ? "checked" : ""} data-dtype="Boolean" /></div>
     </div>`,
   )
+
+  // Affichage : un profil psionique a toujours 4 PV/niveau, quelle que soit la famille.
+  if (isPsi) {
+    const pvLabel = game.i18n.localize("CO.ui.pvLevel")
+    const pvGroup = Array.from(fieldset.querySelectorAll(".form-group")).find((g) => g.querySelector("label")?.textContent.trim() === pvLabel)
+    const pvInput = pvGroup?.querySelector("input")
+    if (pvInput) pvInput.value = PSIONIC_HP_PER_LEVEL
+  }
 }
 
 /** Construit le HTML du bloc Points d'Ego pour une sidebar. */
