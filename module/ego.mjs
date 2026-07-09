@@ -5,7 +5,7 @@ import { MODULE_ID, SETTINGS, FLAGS, EGO_RECOVERY_FORMULA, METABOLISM_SLUG } fro
  *
  * Principe : un pouvoir psionique est une capacité marquée du flag `isPsionic` et qui n'est PAS un sort (`system.properties.spell` à false). 
  * Le cœur de co2 ne dépense donc aucun PM pour ces capacités et n'applique aucun surcoût d'armure. 
- * Le module branche sa logique PE via les hooks `co.preActivateAction` / `co.postActivateAction` / `co.postUseRecovery` ajoutés au système, et injecte son UI via les hooks de rendu des fiches.
+ * Le module branche sa logique PE via les hooks `co2.preActivateAction` / `co2.postActivateAction` / `co2.postUseRecovery` ajoutés au système, et injecte son UI via les hooks de rendu des fiches.
  *
  * Stockage : la valeur courante des PE est un flag d'acteur (`flags.cof2-compagnon.ego.value`).
  * Le maximum est calculé à la volée (VOL + nombre de pouvoirs psi appris).
@@ -135,7 +135,7 @@ function evolvingEgoFormula(actor) {
 // #region Hooks de consommation / récupération
 
 /**
- * Hook `co.preActivateAction` : valide la disponibilité des PE avant d'activer un pouvoir psi.
+ * Hook `co2.preActivateAction` : valide la disponibilité des PE avant d'activer un pouvoir psi.
  * Enregistre une garde asynchrone (`guard`) ; si les PE sont insuffisants, propose la brûlure d'ego. La garde résout sur false pour annuler l'activation.
  */
 export function onPreActivateAction(actor, { item, indice, state, shiftKey, guard } = {}) {
@@ -166,7 +166,7 @@ async function askEgoBurn(actor, item, cost) {
 }
 
 /**
- * Hook `co.postActivateAction` : déduit les PE après une activation réussie d'un pouvoir psi, et applique la brûlure d'ego (PV sacrifiés) si elle a été acceptée en phase pré.
+ * Hook `co2.postActivateAction` : déduit les PE après une activation réussie d'un pouvoir psi, et applique la brûlure d'ego (PV sacrifiés) si elle a été acceptée en phase pré.
  */
 export async function onPostActivateAction(actor, { item, indice, state, shiftKey, success } = {}) {
   const burn = pendingEgoBurn.get(actor.id)
@@ -198,7 +198,7 @@ export async function onPostActivateAction(actor, { item, indice, state, shiftKe
 }
 
 /**
- * Hook `co.postUseRecovery` : propose de dépenser un DR pour récupérer des PE.
+ * Hook `co2.postUseRecovery` : propose de dépenser un DR pour récupérer des PE.
  * 1 DR → 1d4° PE (valeur max du dé sur un repos complet). Un DR ainsi dépensé ne rend pas de PV — sauf si l'acteur possède « Contrôle du métabolisme », auquel cas il récupère aussi des PV.
  */
 export async function onPostUseRecovery(actor, { isFullRest } = {}) {
@@ -253,7 +253,7 @@ export async function onPostUseRecovery(actor, { isFullRest } = {}) {
 }
 
 /**
- * Hook `co.computeProfileHpPerLevel` : force les PV/niveau à 4 pour un profil marqué psionique (la famille reste libre pour le dé de récupération et l'accès aux voies de prestige).
+ * Hook `co2.computeProfileHpPerLevel` : force les PV/niveau à 4 pour un profil marqué psionique (la famille reste libre pour le dé de récupération et l'accès aux voies de prestige).
  * @param {Actor} actor
  * @param {{ profile: Item, value: number }} data Objet mutable : modifier `value` pour surcharger.
  */

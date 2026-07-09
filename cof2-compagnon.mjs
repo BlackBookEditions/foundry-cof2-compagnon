@@ -35,14 +35,14 @@ Hooks.once("init", () => {
 })
 
 // Consommation des Points d'Ego + brûlure d'ego (hooks ajoutés au système co2 dans activateAction)
-Hooks.on("co.preActivateAction", onPreActivateAction)
-Hooks.on("co.postActivateAction", onPostActivateAction)
+Hooks.on("co2.preActivateAction", onPreActivateAction)
+Hooks.on("co2.postActivateAction", onPostActivateAction)
 
 // Récupération des Points d'Ego (hook ajouté au système co2 dans useRecovery)
-Hooks.on("co.postUseRecovery", onPostUseRecovery)
+Hooks.on("co2.postUseRecovery", onPostUseRecovery)
 
 // PV/niveau du profil psionique = 4 (hook ajouté au système co2 dans _prepareHPMax)
-Hooks.on("co.computeProfileHpPerLevel", onComputeProfileHpPerLevel)
+Hooks.on("co2.computeProfileHpPerLevel", onComputeProfileHpPerLevel)
 
 // Injection UI : champs psioniques sur la fiche capacité (classe CoCapacitySheet)
 Hooks.on("renderCoCapacitySheet", injectCapacityFields)
