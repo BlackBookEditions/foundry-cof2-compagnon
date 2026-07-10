@@ -32,9 +32,13 @@
     },
     "dialogs": {
       "recover": {
-        "hint": "Dépenser 1 dé de récupération (DR) pour récupérer :",
+        "hint": "Dépenser un dé de récupération (DR) par ressource récupérée :",
         "pv": "Points de Vigueur (PV)",
         "pe": "Points d'Ego (PE)",
+        "metabolism": "Possède le contrôle du métabolisme",
+        "metabolismHint": "Si coché, récupérer à la fois PV et PE ne coûte qu'un seul DR (au lieu de 2).",
+        "drLine": "DR à dépenser : {spent} — DR disponibles : {available}",
+        "notEnoughDr": "Pas assez de dés de récupération.",
         "confirm": "OK",
         "cancel": "Annuler",
         "nothing": "PV et Points d'Ego déjà au maximum."

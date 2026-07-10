@@ -15,3 +15,20 @@
 .cof2-ego-card .type-card i {
   color: #7b4fb5;
 }
+.co.cof2-recover-dialog .dr-cost {
+  margin-top: 0.5em;
+  font-style: italic;
+  opacity: 0.85;
+}
+.co.cof2-recover-dialog .dr-cost .dr-spent {
+  font-weight: bold;
+  font-style: normal;
+  color: #7b4fb5;
+}
+.co.cof2-recover-dialog label:has(input[type="checkbox"].disabled) {
+  opacity: 0.5;
+  pointer-events: none;
+}
+.co.cof2-recover-dialog input[type="checkbox"].disabled {
+  opacity: 1;
+}

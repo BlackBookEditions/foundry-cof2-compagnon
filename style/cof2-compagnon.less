@@ -33,3 +33,30 @@
 .cof2-ego-card .type-card i {
   color: @psi-color;
 }
+
+// Dialogue de récupération PV/PE : ligne « DR à dépenser », cases grisées quand indisponibles
+// (marquées par la classe .disabled du système co). On préfixe par .co pour l'emporter sur les
+// règles du système et éviter le double estompage (label ET input) → un seul gris uniforme.
+.co.cof2-recover-dialog {
+  .dr-cost {
+    margin-top: 0.5em;
+    font-style: italic;
+    opacity: 0.85;
+
+    .dr-spent {
+      font-weight: bold;
+      font-style: normal;
+      color: @psi-color;
+    }
+  }
+
+  // L'estompe est portée uniquement par le label ; l'input reste à 1 pour ne pas cumuler.
+  label:has(input[type="checkbox"].disabled) {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  input[type="checkbox"].disabled {
+    opacity: 1;
+  }
+}

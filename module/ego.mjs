@@ -228,6 +228,19 @@ export async function handlePsiRecovery(actor, isFullRest) {
     return true
   }
 
+  // PV et PE sont librement cochables. Coût : 1 DR par ressource, SAUF récupérer les deux avec le
+  // « contrôle du métabolisme » qui ne coûte alors qu'un seul DR (au lieu de 2). Le nombre de DR
+  // dépensés ne peut jamais dépasser les DR disponibles (R).
+  const R = rp.value
+  // Coût en DR pour un état donné.
+  const recoveryCost = (pv, pe, meta) => (pv && pe ? (meta ? 1 : 2) : pv || pe ? 1 : 0)
+  // Le métabolisme n'a d'effet (remise) que si les deux ressources peuvent être récupérées.
+  const metaAvailable = pvNeeded && peNeeded
+  // État de départ : aucune case cochée (coût 0), le joueur choisit ce qu'il récupère.
+  const drLine = game.i18n
+    .format("COF2COMPAGNON.dialogs.recover.drLine", { spent: "%SPENT%", available: R })
+    .replace("%SPENT%", `<span class="dr-spent">0</span>`)
+
   const choice = await foundry.applications.api.DialogV2.wait({
     // La classe "co" place le dialogue dans le contexte CSS du système → checkbox stylées comme les siennes
     classes: ["co", "cof2-recover-dialog"],
@@ -235,20 +248,63 @@ export async function handlePsiRecovery(actor, isFullRest) {
     content: `
       <p>${game.i18n.localize("COF2COMPAGNON.dialogs.recover.hint")}</p>
       <div class="form-group">
-        <label><input type="checkbox" name="pv" ${pvNeeded ? "checked" : 'class="disabled"'} /> ${game.i18n.localize("COF2COMPAGNON.dialogs.recover.pv")}</label>
+        <label><input type="checkbox" name="pv" ${pvNeeded ? "" : 'class="disabled"'} /> ${game.i18n.localize("COF2COMPAGNON.dialogs.recover.pv")}</label>
       </div>
       <div class="form-group">
-        <label><input type="checkbox" name="pe" ${peNeeded ? "checked" : 'class="disabled"'} /> ${game.i18n.localize("COF2COMPAGNON.dialogs.recover.pe")}</label>
-      </div>`,
+        <label><input type="checkbox" name="pe" ${peNeeded ? "" : 'class="disabled"'} /> ${game.i18n.localize("COF2COMPAGNON.dialogs.recover.pe")}</label>
+      </div>
+      <div class="form-group">
+        <label data-tooltip="${game.i18n.localize("COF2COMPAGNON.dialogs.recover.metabolismHint")}" data-tooltip-direction="UP"><input type="checkbox" name="metabolism" ${metaAvailable ? "" : 'class="disabled"'} /> ${game.i18n.localize("COF2COMPAGNON.dialogs.recover.metabolism")}</label>
+      </div>
+      <p class="dr-cost">${drLine}</p>`,
     buttons: [
       {
         action: "confirm",
         label: game.i18n.localize("COF2COMPAGNON.dialogs.recover.confirm"),
         default: true,
-        callback: (event, button) => ({ pv: button.form.elements.pv.checked, pe: button.form.elements.pe.checked }),
+        callback: (event, button) => ({
+          pv: button.form.elements.pv.checked,
+          pe: button.form.elements.pe.checked,
+          meta: button.form.elements.metabolism.checked,
+        }),
       },
       { action: "cancel", label: game.i18n.localize("COF2COMPAGNON.dialogs.recover.cancel"), callback: () => null },
     ],
+    render: (event, dialog) => {
+      const root = dialog.element
+      const pvEl = root.querySelector('input[name="pv"]')
+      const peEl = root.querySelector('input[name="pe"]')
+      const metaEl = root.querySelector('input[name="metabolism"]')
+      const spentEl = root.querySelector(".dr-spent")
+      // Cases indisponibles marquées via la classe "disabled" (convention du système co) et non
+      // l'attribut HTML → on s'appuie sur les besoins connus plutôt que sur la propriété DOM.
+      const state = () => ({
+        pv: !!(pvNeeded && pvEl && pvEl.checked),
+        pe: !!(peNeeded && peEl && peEl.checked),
+        meta: !!(metaAvailable && metaEl && metaEl.checked),
+      })
+      const refresh = () => {
+        const s = state()
+        if (spentEl) spentEl.textContent = String(recoveryCost(s.pv, s.pe, s.meta))
+      }
+      const onChange = (ev) => {
+        const target = ev?.target
+        const s = state()
+        // Le coût ne peut pas dépasser les DR disponibles : on annule le changement fautif.
+        if (recoveryCost(s.pv, s.pe, s.meta) > R) {
+          if (target === metaEl) {
+            // Décocher le métabolisme rend PV+PE inabordable → on lâche la ressource PE.
+            if (peNeeded && peEl) peEl.checked = false
+          } else if (target && target.checked) {
+            target.checked = false
+          }
+          ui.notifications.warn(game.i18n.localize("COF2COMPAGNON.dialogs.recover.notEnoughDr"))
+        }
+        refresh()
+      }
+      ;[pvEl, peEl, metaEl].forEach((el) => el?.addEventListener("change", onChange))
+      refresh()
+    },
     rejectClose: false,
     modal: true,
   })
@@ -300,8 +356,9 @@ export async function handlePsiRecovery(actor, isFullRest) {
     await actor.setFlag(MODULE_ID, FLAGS.ego, { value: Math.min(egoCurrent + recovered, egoMax) })
   }
 
-  // Un seul DR dépensé, que PV, PE ou les deux aient été cochés.
-  await actor.update({ "system.resources.recovery.value": Math.max(rp.value - 1, 0) })
+  // 1 DR par ressource, sauf PV + PE avec le contrôle du métabolisme (1 DR au lieu de 2).
+  const spent = recoveryCost(choice.pv, choice.pe, choice.meta)
+  await actor.update({ "system.resources.recovery.value": Math.max(rp.value - spent, 0) })
   return true
 }
 
