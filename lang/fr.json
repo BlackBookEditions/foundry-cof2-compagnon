@@ -6,6 +6,18 @@
         "hint": "Active l'affichage et la gestion du profil Psionique et des Points d'Ego (PE). Tant que cette option est décochée, aucun élément lié au psionique ou à l'ego n'apparaît sur les fiches d'objets ou d'acteurs."
       }
     },
+    "config": {
+      "martialTrainingWeapon": {
+        "bola": "Bola",
+        "lash": "Fouet",
+        "warLash": "Fouet de guerre",
+        "warPick": "Pioche de guerre",
+        "shortSaber": "Sabre court",
+        "rightSaber": "Sabre droit",
+        "blowgun": "Sarbacanne",
+        "tripleStaff": "Tribâton"
+      }
+    },
     "resources": {
       "long": {
         "ego": "Points d'Ego"
