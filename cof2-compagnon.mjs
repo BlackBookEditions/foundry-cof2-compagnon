@@ -28,8 +28,46 @@ Hooks.once("init", () => {
   // Ajoute la cible de modificateur « ep » (Points d'Ego) — possible car le cœur ne fige plus MODIFIERS_TARGET.
   const targets = game.system?.CONST?.MODIFIERS_TARGET
   if (targets && !targets.ep) {
-    targets.ep = { id: "ep", label: "COF2COMPAGNON.resources.long.ego", subtype: "resource" }
+    targets.ep = {
+      id: "ep",
+      label: "COF2COMPAGNON.resources.long.ego",
+      subtype: "resource",
+    }
   }
+
+  // Ajout des catégories martiales
+  game.system.CONST.martialTrainingsWeapons.push({
+    key: "bola",
+    label: "COF2COMPAGNON.config.martialTrainingWeapon.bola",
+  })
+  game.system.CONST.martialTrainingsWeapons.push({
+    key: "lash",
+    label: "COF2COMPAGNON.config.martialTrainingWeapon.lash",
+  })
+  game.system.CONST.martialTrainingsWeapons.push({
+    key: "warLash",
+    label: "COF2COMPAGNON.config.martialTrainingWeapon.warLash",
+  })
+  game.system.CONST.martialTrainingsWeapons.push({
+    key: "warPick",
+    label: "COF2COMPAGNON.config.martialTrainingWeapon.warPick",
+  })
+  game.system.CONST.martialTrainingsWeapons.push({
+    key: "shortSaber",
+    label: "COF2COMPAGNON.config.martialTrainingWeapon.shortSaber",
+  })
+  game.system.CONST.martialTrainingsWeapons.push({
+    key: "rightSaber",
+    label: "COF2COMPAGNON.config.martialTrainingWeapon.rightSaber",
+  })
+  game.system.CONST.martialTrainingsWeapons.push({
+    key: "blowgun",
+    label: "COF2COMPAGNON.config.martialTrainingWeapon.blowgun",
+  })
+  game.system.CONST.martialTrainingsWeapons.push({
+    key: "tripleStaff",
+    label: "COF2COMPAGNON.config.martialTrainingWeapon.tripleStaff",
+  })
 
   console.info("COF2 Compagnon | Fin de l'initialisation du module")
 })
