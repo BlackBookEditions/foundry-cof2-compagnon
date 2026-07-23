@@ -1,7 +1,7 @@
 {
   "id": "cof2-compagnon",
-  "title": "Chroniques Oubliées Fantasy 2 : Compagnon",
-  "description": "Module compagnon pour le système Chroniques Oubliées 2 : ajoute le profil Psionique et la gestion des Points d'Ego (PE) sans modifier le système. Tout l'affichage est conditionné au réglage « Autoriser psionique et points d'ego ».",
+  "title": "Chroniques Oubliées Fantasy 2e édition : Compagnon",
+  "description": "Module qui ajoute au système Chroniques Oubliées v2 des règles du livre Le compagnon du joueur",
   "url": "#{URL}#",
   "version": "#{VERSION}#",
   "compatibility": {
