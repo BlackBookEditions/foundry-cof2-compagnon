@@ -9,7 +9,13 @@ Module Compagnon pour le système **Chroniques Oubliées 2** qui ajoute le profi
     <img alt="GitHub Release Date" src="https://img.shields.io/github/release-date/BlackBookEditions/foundry-cof2-compagnon?label=latest%20release" /> 
 </p>
 
-## Activation
+## Comment installer le module ?
+Il faut installer le module depuis son manifeste. 
+Depuis l'accueil, dans l'onglet Modules :
+- Installer un module 
+- Saisir l'url du manifeste : https://github.com/BlackBookEditions/foundry-cof2-compagnon/releases/download/1.0.0/module.json
+
+## Activation dans le monde
 
 Tout est conditionné à l'option du module **« Autoriser psionique et points d'ego »** (décochée par défaut). Tant qu'elle est décochée, rien de psionique n'apparaît ni n'est traité.
 
