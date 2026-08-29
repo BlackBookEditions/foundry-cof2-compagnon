@@ -4,6 +4,8 @@
   "description": "Module qui ajoute au système Chroniques Oubliées v2 des règles du livre Le compagnon du joueur",
   "url": "#{URL}#",
   "version": "#{VERSION}#",
+  "manifest": "#{MANIFEST}#",
+  "download": "#{DOWNLOAD}#",  
   "compatibility": {
     "minimum": "14",
     "maximum": "14",
@@ -33,7 +35,5 @@
       "path": "lang/fr.json"
     }
   ],
-  "socket": false,
-  "manifest": "#{MANIFEST}#",
-  "download": "#{DOWNLOAD}#"
+  "socket": false
 }
