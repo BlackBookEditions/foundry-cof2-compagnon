@@ -40,7 +40,9 @@
       "noEgoCost": "Sans coût en Ego"
     },
     "profile": {
-      "isPsionic": "Profil psionique"
+      "isPsionic": "Profil psionique",
+      "hpPerLevelOverride": "PV/niveau forcé",
+      "hpPerLevelOverrideHint": "Surcharge le nombre de PV gagnés par niveau pour ce profil, indépendamment de sa famille. Laisser vide pour utiliser la valeur standard de la famille."
     },
     "dialogs": {
       "recover": {

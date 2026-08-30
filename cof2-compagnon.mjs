@@ -10,6 +10,7 @@ import {
   injectMiniEgo,
   injectPartyEgo,
 } from "./module/ego.mjs"
+import { onComputeProfileHpPerLevel as onComputeProfileHpPerLevelOverride, injectProfileHpPerLevelField } from "./module/profile.mjs"
 
 Hooks.once("init", () => {
   console.info("COF2 Compagnon | Initialisation du module...")
@@ -82,11 +83,18 @@ Hooks.on("co2.preUseRecovery", onPreUseRecovery)
 // PV/niveau du profil psionique = 4 (hook ajouté au système co2 dans _prepareHPMax)
 Hooks.on("co2.computeProfileHpPerLevel", onComputeProfileHpPerLevel)
 
+// PV/niveau génériques forcés pour tout profil portant le flag hpPerLevelOverride
+// (mécanisme indépendant du psionique, réutilisable pour tout futur profil custom, ex. Primaliste)
+Hooks.on("co2.computeProfileHpPerLevel", onComputeProfileHpPerLevelOverride)
+
 // Injection UI : champs psioniques sur la fiche capacité (classe CoCapacitySheet)
 Hooks.on("renderCoCapacitySheet", injectCapacityFields)
 
 // Injection UI : case « profil psionique » sur la fiche profil (classe CoProfileSheet)
 Hooks.on("renderCoProfileSheet", injectProfileFields)
+
+// Injection UI : champ « PV/niveau forcé » générique sur la fiche profil (classe CoProfileSheet)
+Hooks.on("renderCoProfileSheet", injectProfileHpPerLevelField)
 
 // Injection UI : bloc Points d'Ego + symbole * + coût des actions (classe COCharacterSheet)
 Hooks.on("renderCOCharacterSheet", injectCharacterEgo)
